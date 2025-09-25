@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 using signalr.backend.Data;
 using signalr.backend.Models;
 
@@ -39,7 +40,7 @@ namespace signalr.backend.Hubs
         public async override Task OnConnectedAsync()
         {
             UserHandler.UserConnections.Add(CurentUser.Email!, Context.UserIdentifier);
-            
+
             // TODO: Envoyer des message aux clients pour les mettre à jour
         }
 
@@ -58,6 +59,7 @@ namespace signalr.backend.Hubs
             await _context.SaveChangesAsync();
 
             // TODO: Envoyer un message aux clients pour les mettre à jour
+            await Clients.Caller.SendAsync("createChannel");
         }
 
         public async Task DeleteChannel(int channelId)
@@ -71,6 +73,7 @@ namespace signalr.backend.Hubs
             }
             string groupName = CreateChannelGroupName(channelId);
             // Envoyer les messages nécessaires aux clients
+            await Clients.Caller.SendAsync("deleteChannel");
         }
 
         public async Task JoinChannel(int oldChannelId, int newChannelId)
@@ -78,8 +81,12 @@ namespace signalr.backend.Hubs
             string userTag = "[" + CurentUser.Email! + "]";
 
             // TODO: Faire quitter le vieux canal à l'utilisateur
+            Channel oldChannel = _context.Channel.Find(oldChannelId);
+            await Clients.Caller.SendAsync("leaveChannel", oldChannel);
 
             // TODO: Faire joindre le nouveau canal à l'utilisateur
+            Channel newChannel = _context.Channel.Find(newChannelId);
+            await Clients.Caller.SendAsync("joinChannel", newChannel);
         }
 
         public async Task SendMessage(string message, int channelId, string userId)
@@ -87,10 +94,12 @@ namespace signalr.backend.Hubs
             if (userId != null)
             {
                 // TODO: Envoyer le message à cet utilisateur
+                await Clients.User(userId).SendAsync("sendMessage");
             }
             else if (channelId != 0)
             {
                 // TODO: Envoyer le message aux utilisateurs connectés à ce canal
+                await Clients.All.SendAsync("sendMessage");
             }
             else
             {
