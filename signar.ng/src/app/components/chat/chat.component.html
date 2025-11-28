@@ -1,9 +1,9 @@
 <div style="border-color: black; border-radius: 1px; border-style: solid; margin: 8px;">
   <div *ngIf="authentication.isLoggedIn()">
-    <div *ngIf="!isConnectedToHub" style="margin: 4px">
+    <div *ngIf="!isConnected" style="margin: 4px">
       <button mat-raised-button color="primary" (click)="connectToHub()">Connexion au Hub SignalR</button>
     </div>
-    <div *ngIf="isConnectedToHub">
+    <div *ngIf="isConnected">
       <div style="display: flex;">
         <div style="background-color: #f3ea0c; width: 25%; padding: 8px">
           <h2>Utilisateurs connectés</h2>
